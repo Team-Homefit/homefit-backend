@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.board.persistence.BoardRepository">
+
+    <select id="selectPageWithCount" resultType="com.homefit.homefit.board.persistence.po.BoardWithCountPo">
+        SELECT 
+            b.community_board_id,
+            b.sgg_cd,
+            b.community_board_created_at,
+            COUNT(a.article_id) AS article_count,
+            (
+                SELECT COUNT(*)
+                FROM interested_region ir
+                WHERE ir.sgg_cd = b.sgg_cd
+            ) AS interest_count
+        FROM community_board b
+        LEFT JOIN article a ON a.community_board_id = b.community_board_id AND a.article_is_deleted = 0
+        GROUP BY b.community_board_id
+        ORDER BY b.community_board_id DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+</mapper>

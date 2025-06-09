@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.board.persistence.ArticleRepository">
+    <select id="getArticles" resultType="com.homefit.homefit.board.persistence.po.ArticlePagePo">
+        SELECT 
+            a.article_id as articleId,
+            a.community_board_id as communityBoardId,
+            a.article_title as articleTitle,
+            a.article_created_at as articleCreatedAt,
+            (SELECT COUNT(*) FROM viewer v WHERE v.viewer_article_id = a.article_id) as viewCount,
+            (SELECT COUNT(*) FROM likes l WHERE l.article_id = a.article_id) as likeCount,
+            (SELECT COUNT(*) FROM comment c WHERE c.article_id = a.article_id) as commentCount,
+            CASE 
+                WHEN l.article_id IS NOT NULL THEN true 
+                ELSE false 
+            END as isLiked,
+            m.nickname as nickname,
+            (
+                SELECT COUNT(*)
+                FROM article a2
+                WHERE a2.article_is_deleted = false
+                <if test="boardId != null">
+                    AND a2.community_board_id = #{boardId}
+                </if>
+                <if test="isLiked != null">
+                    AND EXISTS (
+                        SELECT 1 
+                        FROM likes l2 
+                        WHERE l2.article_id = a2.article_id 
+                        AND l2.member_id = #{memberId}
+                    )
+                </if>
+            ) as totalElements
+        FROM article a
+        LEFT JOIN member m ON a.article_writer_id = m.member_id
+        LEFT JOIN likes l ON a.article_id = l.article_id AND l.member_id = #{memberId}
+        <where>
+            AND a.article_is_deleted = false
+            <if test="boardId != null">
+                AND a.community_board_id = #{boardId}
+            </if>
+            <if test="isLiked != null">
+                AND EXISTS (
+                    SELECT 1 
+                    FROM likes l2 
+                    WHERE l2.article_id = a.article_id 
+                    AND l2.member_id = #{memberId}
+                )
+            </if>
+        </where>
+        ORDER BY a.article_created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="getArticleById" resultType="com.homefit.homefit.board.persistence.po.ArticlePo">
+        SELECT 
+            a.article_id as articleId,
+            a.community_board_id as communityBoardId,
+            a.article_writer_id as articleWriterId,
+            a.article_title as articleTitle,
+            a.article_content as articleContent,
+            a.article_created_at as articleCreatedAt,
+            a.article_last_updated_at as articleLastUpdatedAt,
+            (SELECT COUNT(*) FROM viewer v WHERE v.viewer_article_id = a.article_id) as viewCount,
+            (SELECT COUNT(*) FROM likes l WHERE l.article_id = a.article_id) as likeCount,
+            CASE 
+                WHEN l.article_id IS NOT NULL THEN true 
+                ELSE false 
+            END as isLiked,
+            CASE 
+                WHEN ir.sgg_cd IS NOT NULL THEN true 
+                ELSE false 
+            END as isInterestedRegion,
+            m.nickname as nickname,
+            CONCAT(sc.sido_name, ' ', sc.sgg_name) as regionName,
+            a.article_is_deleted as articleIsDeleted
+        FROM article a
+        LEFT JOIN member m ON a.article_writer_id = m.member_id
+        LEFT JOIN likes l ON a.article_id = l.article_id AND l.member_id = #{memberId}
+        LEFT JOIN community_board cb ON a.community_board_id = cb.community_board_id
+        LEFT JOIN sigungucode sc ON cb.sgg_cd = sc.sgg_cd
+        LEFT JOIN interested_region ir ON cb.sgg_cd = ir.sgg_cd AND ir.member_id = #{memberId}
+        WHERE a.article_id = #{articleId}
+        AND a.article_is_deleted = false
+    </select>
+    
+    <select id="getArticleByComment">
+     SELECT * FROM article a JOIN comment c ON a.article_id = c.article_id WHERE c.comment_id = #{commentId}
+    </select>
+
+    <select id="countById">
+        SELECT count(*) FROM article WHERE article_id = #{id} AND article_is_deleted = false;
+    </select>
+    
+    <select id="countArticleInInterestedRegionById">
+        SELECT count(*)
+        FROM article a
+        JOIN community_board b ON a.community_board_id = b.community_board_id
+        JOIN sigungucode s ON b.sgg_cd = s.sgg_cd
+        JOIN interested_region ir ON ir.sgg_cd = s.sgg_cd
+        WHERE article_id = #{articleId} AND member_id = #{memberId} AND a.article_is_deleted = false;
+    </select>
+
+    <select id="isInterestedRegion">
+        SELECT EXISTS (
+            SELECT 1
+            FROM community_board b
+            JOIN interested_region ir ON b.sgg_cd = ir.sgg_cd
+            WHERE b.community_board_id = #{boardId} 
+            AND ir.member_id = #{memberId}
+        )
+    </select>
+
+    <insert id="createArticle" parameterType="com.homefit.homefit.board.domain.Article">
+        INSERT INTO article (
+            community_board_id,
+            article_writer_id,
+            article_title,
+            article_content,
+            article_created_at,
+            article_is_deleted
+        ) VALUES (
+            #{boardId},
+            #{writerId},
+            #{title},
+            #{content},
+            #{createdAt},
+            false
+        )
+    </insert>
+
+    <update id="updateArticle" parameterType="com.homefit.homefit.board.domain.Article">
+        UPDATE article 
+        SET 
+            article_title = #{title},
+            article_content = #{content},
+            article_last_updated_at = #{lastUpdatedAt}
+        WHERE article_id = #{id}
+        AND article_is_deleted = false
+    </update>
+
+    <update id="deleteArticle">
+        UPDATE article 
+        SET article_is_deleted = true
+        WHERE article_id = #{id}
+        AND article_is_deleted = false
+    </update>
+</mapper>

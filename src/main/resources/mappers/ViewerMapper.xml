@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.board.persistence.ViewerRepository">
+    <insert id="createViewer">
+        INSERT INTO viewer (
+            viewer_article_id,
+            viewer_member_id,
+            view_time
+        ) VALUES (
+            #{articleId},
+            #{memberId},
+            #{viewTime}
+        )
+    </insert>
+    
+    <select id="hasViewedToday">
+        SELECT EXISTS (
+            SELECT 1 
+            FROM viewer 
+            WHERE viewer_article_id = #{articleId} 
+            AND viewer_member_id = #{memberId}
+            AND DATE(view_time) = CURDATE()
+        )
+    </select>
+</mapper>

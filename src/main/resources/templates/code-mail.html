@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>메일 인증 안내</title>
+</head>
+<body style="
+    margin:0;
+    padding:0;
+    background-color:#ffffff;
+    font-family:'Helvetica Neue', sans-serif;">
+  <div style="
+    max-width:600px;
+    margin:60px auto;
+    border-radius:16px;
+    overflow:hidden;">
+    
+    <!-- Header -->
+    <div style="background:#219ebc; padding:30px 20px; text-align:center;">
+      <h1 style="margin:0; color:#fff; font-size:24px;">메인 인증 안내</h1>
+    </div>
+
+    <!-- Content -->
+    <div style="padding:40px 30px; text-align:center; color:#333;">
+      <p style="font-size:16px; margin: 0px; margin-bottom: 4px;">안녕하세요.</p>
+      <p style="font-size:16px; margin: 0px;">HOMEFIT을 이용해 주셔서 감사드립니다.</p>
+      <p style="font-size:16px; margin: 0px; margin-bottom:30px;">아래의 인증 코드를 입력해 주세요.</p>
+
+      <!-- Auth Code Box -->
+      <div style="
+        display:inline-block;
+        background:rgba(142, 202, 230, 0.1);
+        color:#1a7a94;
+        padding:20px 40px;
+        font-size:28px;
+        font-weight:bold;
+        border-radius:12px;
+        letter-spacing:12px;
+        font-family:'Courier New', monospace;
+      ">
+        {{AUTH_CODE}}
+      </div>
+
+      <p style="margin-top:30px; font-size:14px; color:#666;">※ 인증 코드는 발송 시점부터 10분간 유효합니다.</p>
+      <p style="font-size:13px; color:#aaa;">본인이 요청한 게 아니라면 이 메일은 무시하셔도 됩니다.</p>
+    </div>
+
+    <!-- Footer -->
+    <div style="background:#f7f9fc; padding:20px; text-align:center; font-size:12px; color:#999;">
+      ⓒ 2025 HOMEFIT. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>

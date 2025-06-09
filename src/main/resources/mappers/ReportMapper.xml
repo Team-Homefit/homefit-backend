@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.report.persistence.ReportRepository">
+    <resultMap id="reportsMap" type="com.homefit.homefit.report.persistence.po.ReportsPo">
+        <id property="reporteeId" column="reportee_id"/>
+        <result property="reporteeUsername" column="reportee_username"/>
+        <result property="reporteeNickname" column="reportee_nickname"/>
+        <result property="totalReportCount" column="total_report_count"/>
+        <collection
+                property="sources"
+                resultMap="sourceMap"
+                ofType="com.homefit.homefit.report.persistence.po.ReportsPo$Source"/>
+    </resultMap>
+
+    <resultMap id="sourceMap" type="com.homefit.homefit.report.persistence.po.ReportsPo$Source">
+        <id property="targetSourceId" column="target_source_id"/>
+        <id property="type" column="type"/>
+        <collection
+                property="reports"
+                resultMap="reportMap"
+                ofType="com.homefit.homefit.report.persistence.po.ReportsPo$Report"/>
+    </resultMap>
+
+    <resultMap id="reportMap" type="com.homefit.homefit.report.persistence.po.ReportsPo$Report">
+        <id property="reportId" column="report_id"/>
+        <result property="reportedAt" column="reported_at"/>
+        <result property="reporterId" column="reporter_id"/>
+        <result property="reporterUsername" column="reporter_nickname"/>
+        <result property="reporterNickname" column="reporter_username"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.homefit.homefit.report.domain.Report">
+        INSERT INTO report(reporter_id, target_source_id, type, is_passed, reported_at, ban_id)
+        VALUE (#{reporterId}, #{targetSourceId}, #{type}, #{isPassed}, #{reportedAt}, #{banId})
+    </insert>
+
+    <select id="countDuplicateSinceYesterday" parameterType="com.homefit.homefit.report.domain.Report">
+        SELECT count(*)
+        FROM report
+        WHERE reporter_id = #{reporterId}
+            AND target_source_id = #{targetSourceId}
+            AND type = #{type}
+            AND reported_at >= #{reportedAt} - INTERVAL 1 DAY
+    </select>
+
+    <select id="selectAllYetDoneUntil" resultMap="reportsMap">
+        SELECT
+            r.*,
+            reporter.username AS reporter_username,
+            reporter.nickname AS reporter_nickname,
+            COALESCE(a.article_writer_id, c.comment_writer_id) AS reportee_id,
+            COALESCE(reportee_article.username, reportee_comment.username) AS reportee_username,
+            COALESCE(reportee_article.nickname, reportee_comment.nickname) AS reportee_nickname,
+            reportee_counts.total_report_count
+        FROM report r
+        JOIN member reporter ON r.reporter_id = reporter.member_id
+        LEFT JOIN article a ON r.type = 'ARTICLE' AND r.target_source_id = a.article_id
+        LEFT JOIN member reportee_article ON a.article_writer_id = reportee_article.member_id
+        LEFT JOIN comment c ON r.type = 'COMMENT' AND r.target_source_id = c.comment_id
+        LEFT JOIN member reportee_comment ON c.comment_writer_id = reportee_comment.member_id
+        LEFT JOIN (
+            SELECT
+                reportee_id,
+                COUNT(*) AS total_report_count
+            FROM (
+                 SELECT a.article_writer_id AS reportee_id
+                 FROM report r JOIN article a ON r.type = 'ARTICLE' AND r.target_source_id = a.article_id
+                 UNION ALL
+                 SELECT c.comment_writer_id AS reportee_id
+                 FROM report r JOIN comment c ON r.type = 'COMMENT' AND r.target_source_id = c.comment_id
+             ) AS all_reports
+            GROUP BY reportee_id
+        ) AS reportee_counts
+              ON reportee_counts.reportee_id = COALESCE(a.article_writer_id, c.comment_writer_id)
+        WHERE r.is_passed = false AND r.ban_id IS NULL;
+    </select>
+
+    <select id="selectAllByReporteeUntilYetDone" resultType="com.homefit.homefit.report.persistence.po.ReportPo">
+		<![CDATA[
+		  SELECT r.*
+		  FROM report r JOIN article a
+		      ON r.target_source_id = a.article_id
+	      WHERE r.type = 'ARTICLE' AND a.article_writer_id = #{reporteeId} AND r.is_passed = false AND r.ban_id IS NULL AND r.reported_at < #{until}
+	      
+	      UNION ALL
+	      
+	      SELECT r.*
+	      FROM report r JOIN comment c
+	           ON r.target_source_id = c.comment_id
+          WHERE r.type = 'COMMENT' AND c.comment_writer_id = #{reporteeId} AND r.is_passed = false AND r.ban_id IS NULL AND r.reported_at < #{until}
+		]]>
+	</select>
+    
+    <update id="updatePass" parameterType="com.homefit.homefit.report.domain.Report">
+        <foreach collection="reports" item="report" index="index" open="" close="" separator=";">
+            UPDATE report
+            SET is_passed = #{report.isPassed}
+            WHERE report_id = #{report.id}
+        </foreach>
+    </update>
+    
+    <update id="updateBan" parameterType="com.homefit.homefit.report.domain.Report">
+        <foreach collection="reports" item="report" index="index" open="" close="" separator=";">
+            UPDATE report
+            SET ban_id = #{report.banId}
+            WHERE report_id = #{report.id}
+        </foreach>
+    </update>
+</mapper>

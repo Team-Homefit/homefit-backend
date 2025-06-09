@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.region.persistence.ShopRepository">
+
+    <insert id="insertAll">
+        INSERT INTO shop(
+                         shop_code,
+                         shop_name, shop_branch_name,
+                         latitude, longitude,
+                         umd_code, jibun_address, roadname_address,
+                         shop_first_category_code, shop_first_category_name,
+                         shop_second_category_code, shop_second_category_name,
+                         shop_third_category_code, shop_third_category_name)
+        VALUES
+        <foreach collection="shops" item="shop" index="index" open="" close="" separator=",">
+            (#{shop.code},
+             #{shop.name}, #{shop.branchName},
+             #{shop.latitude}, #{shop.longitude},
+             #{shop.umdCode}, #{shop.roadnameAddress}, #{shop.jibunAddress},
+             #{shop.firstCategoryCode}, #{shop.firstCategoryName},
+             #{shop.secondCategoryCode}, #{shop.secondCategoryName},
+             #{shop.thirdCategoryCode}, #{shop.thirdCategoryName})
+        </foreach>
+    </insert>
+
+    <select id="selectNearKm">
+        WITH filtered AS (
+            SELECT
+                shop.*,
+				(
+				    6371 * 2 * ASIN(
+				        SQRT(
+				            POWER(SIN((radians(latitude) - radians(#{latitude})) / 2), 2) +
+				            COS(radians(#{latitude})) *
+				            COS(radians(latitude)) *
+				            POWER(SIN((radians(longitude) - radians(#{longitude})) / 2), 2)
+				        )
+				    )
+				) AS distance
+            FROM shop
+            WHERE latitude BETWEEN (#{latitude} - (1 / 111.32)) AND (#{latitude} + (1 / 111.32))
+                AND longitude BETWEEN (#{longitude} - (1 / (111.32 * COS(RADIANS(#{latitude})))))
+                AND (#{longitude} + (1 / (111.32 * COS(RADIANS(#{latitude})))))
+        ), filtered_dist AS (
+            SELECT * FROM filtered WHERE <![CDATA[distance < #{dist}]]>
+        )
+
+        SELECT
+            shop_first_category_code AS first_category_code, shop_first_category_name AS first_category_name,
+            null AS second_category_code, null AS second_category_name,
+            null AS third_category_code, null AS third_category_name,
+            COUNT(*) AS shop_count
+        FROM filtered_dist
+        WHERE shop_first_category_code
+            IN <foreach collection="firstCodes" item="code" open="(" separator="," close=")"> #{code} </foreach>
+        GROUP BY shop_first_category_code
+
+        UNION ALL
+
+        SELECT
+            shop_first_category_code AS first_category_code, shop_first_category_name AS first_category_name,
+            shop_second_category_code AS shop_second_category_code, shop_second_category_name AS second_category_name,
+            null AS third_category_code, null AS third_category_name,
+            COUNT(*) AS shop_count
+        FROM filtered_dist
+        WHERE shop_second_category_code
+           IN <foreach collection="secondCodes" item="code" open="(" separator="," close=")"> #{code} </foreach>
+        GROUP BY shop_second_category_code
+
+        UNION ALL
+
+        SELECT
+            shop_first_category_code AS first_category_code, shop_first_category_name AS first_category_name,
+            shop_second_category_code AS shop_second_category_code, shop_second_category_name AS second_category_name,
+            shop_third_category_code AS third_category_code, shop_third_category_name AS third_category_name,
+            COUNT(*) AS shop_count
+        FROM filtered_dist
+        WHERE shop_third_category_code
+           IN <foreach collection="thirdCodes" item="code" open="(" separator="," close=")"> #{code} </foreach>
+        GROUP BY shop_third_category_code
+    </select>
+
+
+</mapper>

@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: homefit
+  config:
+    import:
+      - optional:file:.env[.properties]
+
+  datasource:
+    url: ${MYSQL_URL}
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
+  
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          timeout: 5000
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          writetimeout: 5000
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
+          max-tokens: 1000
+    vectorstore:
+      redis:
+        index: ssafy-index
+        prefix: ssafy
+
+mybatis:
+  mapper-locations: classpath:mappers/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+session:
+  attribute:
+    username: authenticated-username
+
+logging:
+  level:
+    org.apache.ibatis: DEBUG
+    org.mybatis: DEBUG
+    jdbc: DEBUG
+    java.sql: DEBUG
+
+server:
+  servlet:
+    session:
+      cookie:
+        same-site: LAX
+        secure: false
+
+redis-stack:
+  host: ${REDIS_STACK_HOST}
+  port: ${REDIS_STACK_PORT}

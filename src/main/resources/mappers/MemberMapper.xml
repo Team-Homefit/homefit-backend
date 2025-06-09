@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.member.persistence.MemberRepository">
+    <insert id="insert" parameterType="com.homefit.homefit.member.domain.Member">
+        INSERT INTO member (username, password, nickname, gender, tel, birth_date, member_signup_at)
+        VALUES(#{username}, #{encodedPassword}, #{nickname}, #{gender}, #{tel}, #{birthday}, #{signUpAt})
+    </insert>
+    
+    <select id="selectById" resultType="com.homefit.homefit.member.persistence.po.MemberPo">
+        SELECT * FROM member WHERE member_id = #{id} and member_is_deleted = false
+    </select>
+    
+    <select id="selectByUsername" parameterType="java.lang.String" resultType="com.homefit.homefit.member.persistence.po.MemberPo">
+        SELECT * FROM member WHERE username = #{username} and member_is_deleted = false
+    </select>
+    
+    <update id="updateMember" parameterType="com.homefit.homefit.member.domain.Member">
+    	UPDATE member
+    	SET nickname = #{nickname}, gender = #{gender}, tel = #{tel}, birth_date = #{birthday}
+    	WHERE member_id = #{id} and member_is_deleted = false
+    </update>
+    
+    <update id="updatePassword" parameterType="com.homefit.homefit.member.domain.Member">
+    	UPDATE member
+    	SET password = #{encodedPassword}
+    	WHERE member_id = #{id} and member_is_deleted = false
+    </update>
+    
+    <update id="updateDeletion" parameterType="com.homefit.homefit.member.domain.Member">
+    	UPDATE member
+    	SET member_is_deleted = #{isDeleted}
+    	WHERE member_id = #{id}
+    </update>
+    
+    <update id="updateRole" parameterType="com.homefit.homefit.member.domain.Member">
+    	UPDATE member
+    	SET role = #{role}
+    	WHERE member_id = #{id} and member_is_deleted = false
+    </update>
+</mapper>

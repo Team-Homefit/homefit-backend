@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.member.persistence.InterestedRegionRepository">
+    <resultMap id="sggResultMap" type="com.homefit.homefit.member.persistence.po.InterestedRegionWithSggPo$Sgg">
+        <id property="code" column="sgg_cd"/>
+        <result property="name" column="sgg_name"/>
+        <result property="boardId" column="community_board_id"/>
+    </resultMap>
+
+    <resultMap id="sidoResultMap" type="com.homefit.homefit.member.persistence.po.InterestedRegionWithSggPo$Sido">
+        <id property="code" column="sido_cd"/>
+        <result property="name" column="sido_name"/>
+        <collection
+                property="sggs"
+                ofType="com.homefit.homefit.member.persistence.po.InterestedRegionWithSggPo$Sgg"
+                resultMap="sggResultMap"/>
+    </resultMap>
+    
+    <resultMap id="interestedRegionResultMap" type="com.homefit.homefit.member.persistence.po.InterestedRegionWithSggPo">
+        <id property="memberId" column="member_id"/>
+        <collection
+                property="sidos"
+                ofType="com.homefit.homefit.member.persistence.po.InterestedRegionWithSggPo$Sido"
+                resultMap="sidoResultMap"/>
+    </resultMap>
+    
+    
+    <insert id="insertAllIgnoreDuplicate" parameterType="java.util.List">
+        INSERT IGNORE INTO interested_region(sgg_cd, member_id)
+        VALUES
+        <foreach collection="interestedRegions" item="interestedRegion" separator=",">
+            (#{interestedRegion.sggCode}, #{interestedRegion.memberId})
+        </foreach>
+    </insert>
+    
+    <select id="countByMember">
+        SELECT count(*) FROM interested_region WHERE member_id = #{memberId}
+    </select>
+    
+    <select id="selectAllByMember" resultMap="interestedRegionResultMap">
+        SELECT i.*, s.*, b.*
+		FROM interested_region i
+		  JOIN sigungucode s USING(sgg_cd)
+          LEFT JOIN community_board b USING(sgg_cd)
+		WHERE member_id = #{memberId};
+    </select>
+    
+    <delete id="deleteAll" parameterType="java.util.List">
+        DELETE FROM interested_region
+        WHERE member_id = #{memberId} AND sgg_cd IN
+	    <foreach collection="sggCodes" item="sggCode" open="(" separator="," close=")">
+	        #{sggCode}
+	    </foreach>
+    </delete>
+</mapper>

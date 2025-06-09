@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.consult.persistence.ConsultRepository">
+    <insert id="insertRoom" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO consult_room(member_id, conversation_id, consult_room_name, consult_room_created_at, consult_room_is_deleted)
+        VALUE (#{memberId}, #{conversationId}, #{name}, #{createdAt}, #{isDeleted})
+    </insert>
+
+    <insert id="insertMessages" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO consult_message(consult_room_id, consult_message_content, is_member_message, consult_message_created_at)
+        VALUES
+        <foreach collection="messages" item="message" open="" close="" separator=",">
+             (#{message.consultRoomId}, #{message.content}, #{message.isMemberMessage}, #{message.createdAt})
+        </foreach>
+    </insert>
+
+    <select id="selectConversationByConsult">
+        SELECT conversation_id FROM consult_room WHERE consult_room_id = #{id}
+    </select>
+
+    <select id="selectRoomsByMemberId" resultType="com.homefit.homefit.consult.persistence.po.ConsultRoomPo">
+        SELECT * FROM consult_room WHERE member_id = #{memberId} AND consult_room_is_deleted = FALSE
+    </select>
+
+    <select id="selectMessagesByRoomId" resultType="com.homefit.homefit.consult.persistence.po.ConsultMessagePo">
+        SELECT * FROM consult_message WHERE consult_room_id = #{roomId}
+    </select>
+
+    <select id="selectRoomById" resultType="com.homefit.homefit.consult.persistence.po.ConsultRoomPo">
+        SELECT * FROM consult_room WHERE consult_room_id = #{id}
+    </select>
+
+    <update id="updateRoomName">
+        UPDATE consult_room 
+        SET consult_room_name = #{name} 
+        WHERE consult_room_id = #{roomId} 
+        AND consult_room_is_deleted = FALSE
+    </update>
+
+    <update id="deleteRoom">
+        UPDATE consult_room SET consult_room_is_deleted = #{isDeleted} WHERE consult_room_id = #{roomId}
+    </update>
+</mapper>

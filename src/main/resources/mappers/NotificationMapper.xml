@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.notification.persistence.NotificationRepository">
+
+    <!-- 공지사항 작성 -->
+    <insert id="insert" parameterType="com.homefit.homefit.notification.domain.Notification" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notification (notification_title, notification_content, notification_created_at, notification_last_updated_at, notification_writer_id, notification_is_deleted)
+        VALUES (#{title}, #{content}, #{createdAt}, #{lastUpdatedAt}, #{writerId}, #{isDeleted})
+    </insert>
+
+    <!-- 공지사항 단건 조회 -->
+    <select id="selectById" resultType="com.homefit.homefit.notification.persistence.po.NotificationPo">
+        SELECT 
+            n.*,
+            m.nickname
+        FROM notification n
+        LEFT JOIN member m ON n.notification_writer_id = m.member_id
+        WHERE n.notification_id = #{id} AND n.notification_is_deleted = false
+    </select>
+
+    <!-- 공지사항 목록 조회 (페이지네이션) -->
+    <select id="selectAll" resultType="com.homefit.homefit.notification.persistence.po.NotificationPo">
+        SELECT * FROM notification WHERE notification_is_deleted = false
+        ORDER BY notification_created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 공지사항 수정 -->
+    <update id="update" parameterType="com.homefit.homefit.notification.domain.Notification">
+        UPDATE notification
+        SET notification_title = #{title},
+            notification_content = #{content},
+            notification_last_updated_at = #{lastUpdatedAt}
+        WHERE notification_id = #{id} AND notification_is_deleted = false
+    </update>
+
+    <!-- 논리적 삭제 -->
+    <update id="deleteById">
+        UPDATE notification SET notification_is_deleted = true WHERE notification_id = #{notificationId}
+    </update>
+
+    <!-- 전체 개수 -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM notification WHERE notification_is_deleted = false
+    </select>
+
+    <!-- 페이지 정보와 목록을 한 번에 조회 -->
+    <select id="selectPageWithList" resultMap="pageWithListResultMap">
+        WITH page_info AS (
+            SELECT 
+                COUNT(*) as totalElements,
+                CEIL(COUNT(*) / #{size}) as totalPages,
+                #{page} as currentPage,
+                #{size} as pageSize
+            FROM notification 
+            WHERE notification_is_deleted = false
+        )
+        SELECT 
+            p.*,
+            n.*
+        FROM page_info p
+        CROSS JOIN (
+            SELECT * FROM notification 
+            WHERE notification_is_deleted = false
+            ORDER BY notification_created_at DESC
+            LIMIT #{size} OFFSET #{offset}
+        ) n
+    </select>
+
+    <resultMap id="pageWithListResultMap" type="com.homefit.homefit.notification.persistence.po.NotificationPagePo">
+        <result property="totalElements" column="totalElements"/>
+        <result property="totalPages" column="totalPages"/>
+        <result property="currentPage" column="currentPage"/>
+        <result property="pageSize" column="pageSize"/>
+        <collection property="notifications" ofType="com.homefit.homefit.notification.persistence.po.NotificationPo">
+            <id property="notificationId" column="notification_id"/>
+            <result property="notificationTitle" column="notification_title"/>
+            <result property="notificationContent" column="notification_content"/>
+            <result property="notificationCreatedAt" column="notification_created_at"/>
+            <result property="notificationLastUpdatedAt" column="notification_last_updated_at"/>
+            <result property="notificationWriterId" column="notification_writer_id"/>
+            <result property="notificationIsDeleted" column="notification_is_deleted"/>
+        </collection>
+    </resultMap>
+</mapper>

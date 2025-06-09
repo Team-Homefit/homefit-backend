@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.board.persistence.LikeRepository">
+    <insert id="insert">
+        INSERT INTO likes(article_id, member_id, like_created_at)
+        VALUE(#{articleId}, #{memberId}, #{createdAt})
+    </insert>
+    
+    <select id="countById">
+        SELECT count(*) FROM likes WHERE article_id = #{articleId} AND member_id = #{memberId}
+    </select>
+    
+    <delete id="deleteById">
+        DELETE FROM likes WHERE article_id = #{articleId} AND member_id = #{memberId}
+    </delete>
+</mapper>

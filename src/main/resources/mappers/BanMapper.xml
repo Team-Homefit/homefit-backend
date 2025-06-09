@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.report.persistence.BanRepository">
+    <insert id="insert" parameterType="com.homefit.homefit.report.domain.Ban" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ban(banned_member_id, start_at, expire_at, reason, submit_apology)
+            VALUE (#{bannedMemberId}, #{start}, #{expire}, #{reason}, #{submitApology})
+    </insert>
+    
+    <select id="selectById">
+        SELECT * FROM ban WHERE ban_id = #{id}
+    </select>
+    
+    <select id="selectByMemberYetDoneUntil">
+        SELECT *
+        FROM ban
+        WHERE banned_member_id = #{memberId} AND (expire_at > #{until} OR submit_apology = false)
+        ORDER BY expire_at DESC
+        LIMIT 1;
+    </select>
+    
+    <update id="updateSubmitApology">
+        UPDATE ban SET submit_apology = #{submitApology} WHERE ban_id = #{id}
+    </update>
+</mapper>

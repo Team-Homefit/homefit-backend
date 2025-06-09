@@ -1,0 +1,26 @@
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+bin/
+
+# 환경변수
+.env
+
+### IDE ###
+# STS
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+# IntelliJ
+.idea
+*.iws
+*.iml
+*.ipr
+# VS Code
+.vscode/

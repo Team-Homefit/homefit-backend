@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.board.persistence.CommentRepository">
+    <insert id="insert">
+        INSERT INTO comment(article_id, comment_writer_id, parent_comment_id, comment_content, comment_created_at, comment_is_deleted)
+        VALUE(#{articleId}, #{writerId}, #{parentCommentId}, #{content}, #{createdAt}, #{isDeleted})
+    </insert>
+
+    <select id="findByArticleId" resultType="com.homefit.homefit.board.persistence.po.ArticlePo$Comment">
+        SELECT 
+            c.comment_id as commentId,
+            c.article_id as articleId,
+            c.comment_writer_id as commentWriterId,
+            c.parent_comment_id as parentCommentId,
+            c.comment_content as commentContent,
+            c.comment_created_at as commentCreatedAt,
+            c.comment_is_deleted as commentIsDeleted,
+            m.nickname as nickname,
+            CASE 
+                WHEN c.parent_comment_id IS NOT NULL THEN true 
+                ELSE false 
+            END as isReply
+        FROM comment c
+        LEFT JOIN member m ON c.comment_writer_id = m.member_id
+        WHERE c.article_id = #{articleId}
+        ORDER BY 
+            CASE 
+                WHEN c.parent_comment_id IS NULL THEN c.comment_created_at 
+                ELSE (SELECT comment_created_at FROM comment WHERE comment_id = c.parent_comment_id)
+            END,
+            c.comment_created_at
+    </select>
+
+    <select id="selectById">
+        SELECT
+            comment_id as commentId,
+            article_id as articleId,
+            comment_writer_id as commentWriterId,
+            parent_comment_id as parentCommentId,
+            comment_content as commentContent,
+            comment_created_at as commentCreatedAt,
+            comment_is_deleted as commentIsDeleted
+        FROM comment
+        WHERE comment_id = #{id};
+    </select>
+    
+    <update id="updateIsDeleted">
+        UPDATE comment SET comment_is_deleted = #{isDeleted} WHERE comment_id = #{id}
+    </update>
+</mapper> 

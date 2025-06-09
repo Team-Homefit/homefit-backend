@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.region.persistence.RegionRepository">
+    <resultMap id="umdResultMap" type="com.homefit.homefit.region.persistence.po.SidoPo$Umd">
+        <id property="code" column="dong_code"/>
+        <result property="name" column="dong_name"/>
+    </resultMap>
+
+    <resultMap id="sggResultMap" type="com.homefit.homefit.region.persistence.po.SidoPo$Sgg">
+        <id property="code" column="gugun_code"/>
+        <result property="name" column="gugun_name"/>
+        <collection
+                property="umds"
+                ofType="com.homefit.homefit.region.persistence.po.SidoPo$Umd"
+                resultMap="umdResultMap"/>
+    </resultMap>
+
+    <resultMap id="sidoResultMap" type="com.homefit.homefit.region.persistence.po.SidoPo">
+        <id property="code" column="sido_code"/>
+        <result property="name" column="sido_name"/>
+        <collection
+                property="sggs"
+                ofType="com.homefit.homefit.region.persistence.po.SidoPo$Sgg"
+                resultMap="sggResultMap"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="sidoResultMap">
+        SELECT
+            sido_name, substr(dong_code, 1, 2) as sido_code,
+            gugun_name, substr(dong_code, 1, 5) as gugun_code,
+            dong_name, substr(dong_code, 1, 10) as dong_code
+        FROM dongcode
+        WHERE gugun_name IS NOT NULL AND dong_name IS NOT NULL
+        ORDER BY sido_code, gugun_name, dong_name
+    </select>
+</mapper>

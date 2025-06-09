@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.homefit.homefit.house.persistence.HouseRepository">
+	<sql id="searchHouseDealConditions">
+		<where>
+            <if test="condition.swLatitude != null">
+                 AND hi.latitude > #{condition.swLatitude}
+            </if>
+            <if test="condition.neLatitude != null">
+                 <![CDATA[AND hi.latitude < #{condition.neLatitude}]]>
+            </if>
+            <if test="condition.swLongitude != null">
+                 AND hi.longitude > #{condition.swLongitude}
+            </if>
+            <if test="condition.neLongitude != null">
+                 <![CDATA[AND hi.longitude < #{condition.neLongitude}]]>
+            </if>
+			<if test="condition.sequence != null and condition.sequence != ''">
+				AND hi.apt_seq = #{condition.sequence}
+			</if>
+			<if test="condition.sggCode != null and condition.sggCode != ''">
+				AND hi.sgg_cd = #{condition.sggCode}
+			</if>
+			<if test="condition.umdCode != null and condition.umdCode != ''">
+				AND hi.umd_cd = #{condition.umdCode}
+			</if>
+		</where>
+	</sql>
+
+    <select id="searchHouseBySequence" resultType="com.homefit.homefit.house.persistence.po.HousePo">
+        SELECT * FROM houseinfo WHERE apt_seq = #{sequence}
+    </select>
+    
+    <select id="searchAreasBySequence">
+        SELECT DISTINCT hd.exclu_use_ar AS excluUseAr
+		FROM housedeal hd
+		JOIN houseinfo hi ON hd.apt_seq = hi.apt_seq
+		WHERE hi.apt_seq = #{sequence}
+		ORDER BY hd.exclu_use_ar
+    </select>
+    
+    <select id="searchHouseDealsBy">
+		SELECT
+		  hd.deal_amount, hd.deal_year, hd.deal_month, hd.deal_day,
+		  CASE
+		      WHEN hd.apt_dong REGEXP '^[0-9]+$' THEN hd.apt_dong
+		      ELSE NULL
+	      END AS apt_dong, hd.floor, hd.exclu_use_ar
+		FROM housedeal hd
+		JOIN houseinfo hi ON hd.apt_seq = hi.apt_seq
+		<where>
+		  <if test="sequence != null and sequence != ''">AND hi.apt_seq = #{sequence}</if>
+		  <if test="area != null and area != 0">AND hd.exclu_use_ar = #{area}</if>
+		  <if test="since != null">AND STR_TO_DATE(CONCAT(hd.deal_year, '-', LPAD(hd.deal_month, 2, '0'), '-', LPAD(hd.deal_day, 2, '0')), '%Y-%m-%d') > #{since}</if>
+		  <if test="until != null">AND <![CDATA[STR_TO_DATE(CONCAT(hd.deal_year, '-', LPAD(hd.deal_month, 2, '0'), '-', LPAD(hd.deal_day, 2, '0')), '%Y-%m-%d') < #{until}]]></if>
+		</where>
+		ORDER BY hd.deal_year DESC, hd.deal_month DESC, hd.deal_day DESC;
+    </select>
+    
+    <select id="searchDealsByPage" resultType="com.homefit.homefit.house.persistence.po.DealPagePo">
+	    SELECT
+			hd.no AS no,
+			hi.apt_seq,
+			hi.apt_nm,
+			hi.build_year,
+			hi.latitude,
+			hi.longitude,
+		    hi.sgg_cd,
+		    hi.umd_cd,
+			hd.apt_dong,
+			hd.floor,
+			hd.exclu_use_ar AS excluUseAr,
+			hd.deal_amount AS dealAmount,
+			hd.deal_year AS dealYear,
+			hd.deal_month AS dealMonth,
+			hd.deal_day AS dealDay,
+			count_info.totalElements
+	    FROM housedeal hd
+	    JOIN houseinfo hi ON hd.apt_seq = hi.apt_seq
+	    CROSS JOIN (
+	        SELECT COUNT(*) AS totalElements
+	        FROM housedeal hd
+	        JOIN houseinfo hi ON hd.apt_seq = hi.apt_seq
+			<include refid="searchHouseDealConditions"/>
+	    ) count_info
+		<include refid="searchHouseDealConditions"/>
+        ORDER BY hd.deal_year DESC, hd.deal_month DESC, hd.deal_day DESC
+	    LIMIT #{pageSize}
+	    OFFSET #{offset}
+	</select>
+</mapper>
