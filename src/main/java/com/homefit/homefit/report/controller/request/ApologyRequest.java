@@ -8,7 +8,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ApologyRequest {
-	@NotNull
+	@NotNull(message = "정지 ID는 필수입니다")
 	private final Long banId;
 
 	@Override

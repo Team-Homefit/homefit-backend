@@ -9,9 +9,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ReportRequest {
-    @NotNull
+    @NotNull(message = "신고할 자원 ID는 필수입니다")
     private final Long targetSourceId;
-    @NotNull
+    @NotNull(message = "신고할 자원 유형은 필수입니다")
     private final ReportType type;
 
     @Override
