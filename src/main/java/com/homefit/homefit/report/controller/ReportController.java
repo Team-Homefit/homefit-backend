@@ -1,6 +1,9 @@
 package com.homefit.homefit.report.controller;
 
 import com.homefit.homefit.report.application.ReportService;
+import com.homefit.homefit.report.application.command.ApologyCommand;
+import com.homefit.homefit.report.application.command.BanCommand;
+import com.homefit.homefit.report.application.command.ReportCommand;
 import com.homefit.homefit.report.application.dto.BanDto;
 import com.homefit.homefit.report.application.dto.ReportStatisticDto;
 import com.homefit.homefit.report.controller.request.ApologyRequest;
@@ -29,9 +32,11 @@ public class ReportController implements ReportApiSpecification {
 
     @PostMapping
     public ResponseEntity<Void> report(@RequestBody @Valid ReportRequest request) {
-        log.info("신고 요청: {}", request);
+        log.info("신고 요청");
 
-        reportService.report(request);
+        ReportCommand command = ReportCommand.of(request.getTargetSourceId(), request.getType());
+
+        reportService.report(command);
 
         return ResponseEntity.ok(null);
     }
@@ -46,10 +51,12 @@ public class ReportController implements ReportApiSpecification {
     }
     
     @PostMapping("/ban")
-    public ResponseEntity<Void> ban(@RequestBody @Valid BanRequest banRequest) {
-        log.info("사용자 정지 요청: {}", banRequest);
+    public ResponseEntity<Void> ban(@RequestBody @Valid BanRequest request) {
+        log.info("사용자 정지 요청: {}", request);
+
+        BanCommand command = BanCommand.of(request.getReporteeId(), request.getDuration(), request.getReason());
         
-        reportService.banMember(banRequest);
+        reportService.banMember(command);
         
 		return ResponseEntity.ok(null);
     }
@@ -65,9 +72,11 @@ public class ReportController implements ReportApiSpecification {
     
     @PostMapping("/ban/apology")
     public ResponseEntity<Void> apology(@RequestBody @Valid ApologyRequest request) {
-        log.info("반성문 제출 요청: {}", request);
+        log.info("반성문 제출 요청");
+
+        ApologyCommand command = ApologyCommand.of(request.getBanId());
         
-        reportService.apology(request);
+        reportService.apology(command);
         
 		return ResponseEntity.ok(null);
     }
