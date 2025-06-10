@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.homefit.homefit.member.application.InterestedRegionService;
+import com.homefit.homefit.member.application.command.AddInterestedRegionCommand;
+import com.homefit.homefit.member.application.command.DeleteInterestedRegionCommand;
 import com.homefit.homefit.member.application.dto.InterestedRegionDto;
 import com.homefit.homefit.member.controller.request.AddInterestedRegionsRequest;
 import com.homefit.homefit.member.controller.request.DeleteInterestedRegionRequest;
@@ -29,16 +31,18 @@ public class InterestedRegionController implements InterestedRegionApiSpecificat
 	
 	@PostMapping
 	public ResponseEntity<AddInterestedRegionsResponse> addRegions(@RequestBody @Valid AddInterestedRegionsRequest request) {
-		log.info("관심지역 추가 요청: 코드={}", request);
+		log.info("관심지역 추가 요청");
+
+		AddInterestedRegionCommand command = AddInterestedRegionCommand.of(request.getSggCodes());
 		
-		Integer numberOfAdd = interestedRegionService.addInterestedRegions(request);
+		Integer numberOfAdd = interestedRegionService.addInterestedRegions(command);
 		
 		return ResponseEntity.ok(AddInterestedRegionsResponse.of(numberOfAdd));
 	}
 	
 	@GetMapping
 	public ResponseEntity<SearchInterestedRegionResponse> searchRegions() {
-		log.info("관심지역 추가 요청");
+		log.info("관심지역 조회 요청");
 		
 		InterestedRegionDto interestedRegionDto = interestedRegionService.searchInterestedRegions();
 		
@@ -47,9 +51,11 @@ public class InterestedRegionController implements InterestedRegionApiSpecificat
 	
 	@DeleteMapping
 	public ResponseEntity<DeleteInterestedRegionsResponse> deleteRegions(@RequestBody @Valid DeleteInterestedRegionRequest request) {
-		log.info("관심지역 삭제 요청: 코드={}", request);
+		log.info("관심지역 삭제 요청");
+
+		DeleteInterestedRegionCommand command = DeleteInterestedRegionCommand.of(request.getSggCodes());
 		
-		Integer numberOfDelete = interestedRegionService.deleteInterestedRegions(request);
+		Integer numberOfDelete = interestedRegionService.deleteInterestedRegions(command);
 		
 		return ResponseEntity.ok(DeleteInterestedRegionsResponse.of(numberOfDelete));
 	}

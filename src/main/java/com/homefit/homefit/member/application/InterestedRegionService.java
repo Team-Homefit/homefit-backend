@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.homefit.homefit.exception.HomefitException;
+import com.homefit.homefit.member.application.command.AddInterestedRegionCommand;
+import com.homefit.homefit.member.application.command.DeleteInterestedRegionCommand;
 import com.homefit.homefit.member.application.dto.InterestedRegionDto;
-import com.homefit.homefit.member.controller.request.AddInterestedRegionsRequest;
-import com.homefit.homefit.member.controller.request.DeleteInterestedRegionRequest;
 import com.homefit.homefit.member.domain.InterestedRegion;
 import com.homefit.homefit.member.persistence.InterestedRegionRepository;
 import com.homefit.homefit.member.persistence.po.InterestedRegionWithSggPo;
@@ -26,11 +26,11 @@ public class InterestedRegionService {
 
 	@Transactional
 	@PreAuthorize("hasAnyRole('ADMIN', 'BASIC')")
-	public Integer addInterestedRegions(AddInterestedRegionsRequest request) {
+	public Integer addInterestedRegions(AddInterestedRegionCommand command) {
 		Long memberId = UserPrincipalUtil.getId()
 				.orElseThrow(() -> new HomefitException(HttpStatus.FORBIDDEN, "현재 사용자를 찾을 수 없습니다"));
 		
-		List<InterestedRegion> interestedRegions = request.getSggCodes().stream()
+		List<InterestedRegion> interestedRegions = command.getSggCodes().stream()
 				.map((code) -> InterestedRegion.of(memberId, code))
 				.toList();
 		
@@ -56,11 +56,11 @@ public class InterestedRegionService {
 	
 	@Transactional
 	@PreAuthorize("hasAnyRole('ADMIN', 'BASIC')")
-	public Integer deleteInterestedRegions(DeleteInterestedRegionRequest request) {
+	public Integer deleteInterestedRegions(DeleteInterestedRegionCommand command) {
 		Long memberId = UserPrincipalUtil.getId()
 				.orElseThrow(() -> new HomefitException(HttpStatus.FORBIDDEN, "현재 사용자를 찾을 수 없습니다"));
 		
-		int result = interestedRegionRepository.deleteAll(memberId, request.getSggCodes());
+		int result = interestedRegionRepository.deleteAll(memberId, command.getSggCodes());
 		
 		return result;
 	}
