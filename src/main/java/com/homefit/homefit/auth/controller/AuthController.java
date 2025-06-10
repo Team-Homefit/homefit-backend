@@ -1,6 +1,8 @@
 package com.homefit.homefit.auth.controller;
 
 import com.homefit.homefit.auth.application.AuthService;
+import com.homefit.homefit.auth.application.command.IssueCodeCommand;
+import com.homefit.homefit.auth.application.command.VerifyCodeCommand;
 import com.homefit.homefit.auth.controller.request.IssueCodeRequest;
 import com.homefit.homefit.auth.controller.request.VerifyCodeRequest;
 import jakarta.servlet.http.HttpSession;
@@ -28,7 +30,9 @@ public class AuthController implements AuthApiSpecification {
     public ResponseEntity<Void> issueCode(@RequestBody @Valid IssueCodeRequest request) {
         log.info("이메일 인증 코드 발급 요청: {}", request);
 
-        authService.sendCodeMail(request);
+        IssueCodeCommand command = IssueCodeCommand.of(request.getUsername(), request.getIsSignUp());
+
+        authService.sendCodeMail(command);
 
         return ResponseEntity.status(HttpStatus.OK).build();
     }
@@ -37,7 +41,9 @@ public class AuthController implements AuthApiSpecification {
     public ResponseEntity<Void> verifyCode(@RequestBody @Valid VerifyCodeRequest request, HttpSession session) {
         log.info("이메일 인증 코드 검사 요청: {}", request);
 
-        authService.verifyCode(request);
+        VerifyCodeCommand command = VerifyCodeCommand.of(request.getUsername(), request.getCode());
+
+        authService.verifyCode(command);
         session.setAttribute(attributeOfUsername, request.getUsername());
 
         return ResponseEntity.status(HttpStatus.OK).build();
