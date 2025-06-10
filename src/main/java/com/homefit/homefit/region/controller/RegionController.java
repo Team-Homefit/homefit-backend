@@ -34,7 +34,7 @@ public class RegionController implements RegionApiSpecification {
     public ResponseEntity<SearchShopCountResponse> searchShopNearBy(@RequestParam Double latitude, @RequestParam Double longitude) {
         log.info("좌표 인근 상가 조회 요청: lat={}, lng={}", latitude, longitude);
 
-        List<ShopCountDto> dtos = regionService.searchSecondShopsNear(latitude, longitude);
+        List<ShopCountDto> dtos = regionService.searchShopsNear(latitude, longitude);
 
         return ResponseEntity.ok(SearchShopCountResponse.of(dtos));
     }
