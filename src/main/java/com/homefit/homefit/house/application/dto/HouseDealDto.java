@@ -27,7 +27,7 @@ public class HouseDealDto {
 		
 		return new HouseDealDto(
 				sequence,
-				sumOfAmount / (deals.size() == 0 ? 1 : deals.size()),
+				sumOfAmount / (deals.isEmpty() ? 1 : deals.size()),
 				pos.stream().map(Deal::from).toList());
 	}
 
