@@ -1,11 +1,11 @@
 package com.homefit.homefit.member.application;
 
 import com.homefit.homefit.exception.HomefitException;
+import com.homefit.homefit.member.application.command.ModifyMemberCommand;
+import com.homefit.homefit.member.application.command.ModifyPasswordCommand;
+import com.homefit.homefit.member.application.command.ModifyRoleCommand;
+import com.homefit.homefit.member.application.command.SignUpCommand;
 import com.homefit.homefit.member.application.dto.MemberDto;
-import com.homefit.homefit.member.controller.request.ModifyMemberRequest;
-import com.homefit.homefit.member.controller.request.ModifyPasswordRequest;
-import com.homefit.homefit.member.controller.request.ModifyRoleRequest;
-import com.homefit.homefit.member.controller.request.SignUpRequest;
 import com.homefit.homefit.member.domain.Member;
 import com.homefit.homefit.member.domain.Role;
 import com.homefit.homefit.member.persistence.MemberRepository;
@@ -31,18 +31,14 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public MemberDto signUp(SignUpRequest request, String username) {
-        if (username == null) {
-            throw new HomefitException(HttpStatus.FORBIDDEN, "이메일 인증 후 가입할 수 있습니다");
-        }
-
+    public MemberDto signUp(SignUpCommand command) {
         Member member = Member.of(
-                username,
-                passwordEncoder.encode(request.getPassword()),
-                request.getNickname(),
-                request.getGender(),
-                request.getTel(),
-                request.getBirthday(),
+                command.getUsername(),
+                passwordEncoder.encode(command.getPassword()),
+                command.getNickname(),
+                command.getGender(),
+                command.getTel(),
+                command.getBirthday(),
                 LocalDateTime.now(),
                 Role.BASIC
         );
@@ -50,10 +46,10 @@ public class MemberService {
         try {
             memberRepository.insert(member);
         } catch (DuplicateKeyException e) {
-            throw new HomefitException(HttpStatus.BAD_REQUEST, "이미 가입된 이메일입니다", username);
+            throw new HomefitException(HttpStatus.BAD_REQUEST, "이미 가입된 이메일입니다", member.getUsername());
         }
 
-        MemberPo memberPo = memberRepository.selectByUsername(username);
+        MemberPo memberPo = memberRepository.selectByUsername(member.getUsername());
 
         return MemberDto.from(memberPo);
     }
@@ -76,7 +72,7 @@ public class MemberService {
 
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN', 'BASIC')")
-    public MemberDto modifyMember(ModifyMemberRequest request) {
+    public MemberDto modifyMember(ModifyMemberCommand command) {
         Long currentMemberId = UserPrincipalUtil.getId()
                 .orElseThrow(() -> new HomefitException(HttpStatus.FORBIDDEN, "현재 로그인 한 사용자 정보를 조회할 수 없습니다"));
         
@@ -86,10 +82,10 @@ public class MemberService {
         }
         
         Member member = originMemberPo.toDomain();
-        member.updateNickname(request.getNickname());
-        member.updateGender(request.getGender());
-        member.updateTel(request.getTel());
-        member.updateBirthday(request.getBirthday());
+        member.updateNickname(command.getNickname());
+        member.updateGender(command.getGender());
+        member.updateTel(command.getTel());
+        member.updateBirthday(command.getBirthday());
         
         int result = memberRepository.updateMember(member);
         if (result == 0) {
@@ -105,22 +101,19 @@ public class MemberService {
     }
 
     @Transactional
-    public void modifyPassword(ModifyPasswordRequest request, String username) {
-        if (username == null) {
-            throw new HomefitException(HttpStatus.FORBIDDEN, "이메일 인증 후 변경할 수 있습니다");
-        }
+    public void modifyPassword(ModifyPasswordCommand command) {
 
-        MemberPo originMemberPo = memberRepository.selectByUsername(username);
+        MemberPo originMemberPo = memberRepository.selectByUsername(command.getUsername());
         if (originMemberPo == null) {
             throw new HomefitException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다");
         }
 
         Member member = originMemberPo.toDomain();
-        if (passwordEncoder.matches(request.getNewPassword(), member.getEncodedPassword())) {
+        if (passwordEncoder.matches(command.getNewPassword(), member.getEncodedPassword())) {
             throw new HomefitException(HttpStatus.BAD_REQUEST, "기존 비밀번호와 동일합니다");
         }
         
-        member.updatePassword(passwordEncoder.encode(request.getNewPassword()));
+        member.updatePassword(passwordEncoder.encode(command.getNewPassword()));
 
         int result = memberRepository.updatePassword(member);
         if (result == 0) {
@@ -130,26 +123,19 @@ public class MemberService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public MemberDto modifyRole(ModifyRoleRequest request) {
-        MemberPo originMemberPo = memberRepository.selectById(request.getId());
+    public void modifyRole(ModifyRoleCommand command) {
+        MemberPo originMemberPo = memberRepository.selectById(command.getId());
         if (originMemberPo == null) {
             throw new HomefitException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다");
         }
 
         Member member = originMemberPo.toDomain();
-        member.updateRole(request.getRole());
+        member.updateRole(command.getRole());
 
         int result = memberRepository.updateRole(member);
         if (result == 0) {
             throw new HomefitException(HttpStatus.INTERNAL_SERVER_ERROR, "사용자 권한 변경에 실패하였습니다");
         }
-        
-        MemberPo modifiedMemberPo = memberRepository.selectById(member.getId());
-        if (modifiedMemberPo == null) {
-            throw new HomefitException(HttpStatus.NOT_FOUND, "사용자 저장 후 조회에 실패했습니다");
-        }
-
-        return MemberDto.from(modifiedMemberPo);
     }
 
     @Transactional

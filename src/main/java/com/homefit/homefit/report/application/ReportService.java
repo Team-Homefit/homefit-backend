@@ -2,6 +2,7 @@ package com.homefit.homefit.report.application;
 
 import com.homefit.homefit.exception.HomefitException;
 import com.homefit.homefit.member.application.MemberService;
+import com.homefit.homefit.member.application.command.ModifyRoleCommand;
 import com.homefit.homefit.member.controller.request.ModifyRoleRequest;
 import com.homefit.homefit.member.domain.Member;
 import com.homefit.homefit.member.domain.Role;
@@ -112,7 +113,7 @@ public class ReportService {
 			reportRepository.updateBan(reports);
 		}
         
-        memberService.modifyRole(ModifyRoleRequest.of(ban.getBannedMemberId(), Role.BANNED));
+        memberService.modifyRole(ModifyRoleCommand.of(ban.getBannedMemberId(), Role.BANNED));
     }
 
     public BanDto getBan() {

@@ -2,6 +2,10 @@ package com.homefit.homefit.member.controller;
 
 import com.homefit.homefit.exception.HomefitException;
 import com.homefit.homefit.member.application.MemberService;
+import com.homefit.homefit.member.application.command.ModifyMemberCommand;
+import com.homefit.homefit.member.application.command.ModifyPasswordCommand;
+import com.homefit.homefit.member.application.command.ModifyRoleCommand;
+import com.homefit.homefit.member.application.command.SignUpCommand;
 import com.homefit.homefit.member.application.dto.MemberDto;
 import com.homefit.homefit.member.controller.request.ModifyMemberRequest;
 import com.homefit.homefit.member.controller.request.ModifyPasswordRequest;
@@ -36,14 +40,23 @@ public class MemberController implements MemberApiSpecification {
     private final MemberService memberService;
     private final SessionService sessionService;
     @Value("${session.attribute.username}")
-    private String attributeOfUsername;
+    private static String attributeOfUsername;
 
     @PostMapping("/sign-up")
     public ResponseEntity<MemberResponse> signUp(@RequestBody @Valid SignUpRequest request, HttpSession session) {
-        log.info("회원가입 요청: request={}", request);
+        log.info("회원가입 요청");
 
         String authenticatedUsername = (String) session.getAttribute(attributeOfUsername);
-        MemberDto memberDto = memberService.signUp(request, authenticatedUsername);
+        SignUpCommand command = SignUpCommand.of(
+                authenticatedUsername,
+                request.getPassword(),
+                request.getNickname(),
+                request.getGender(),
+                request.getTel(),
+                request.getBirthday());
+
+        MemberDto memberDto = memberService.signUp(command);
+
         session.setAttribute(attributeOfUsername, null);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(MemberResponse.fromMember(memberDto));
@@ -51,7 +64,7 @@ public class MemberController implements MemberApiSpecification {
 
     @GetMapping("/{member-id}")
     public ResponseEntity<MemberResponse> getMember(@PathVariable("member-id") Long memberId) {
-        log.info("사용자 조회 요청: memberId={}", memberId);
+        log.info("사용자 조회 요청");
 
         MemberDto memberDto = memberService.searchMember(memberId);
 
@@ -60,19 +73,29 @@ public class MemberController implements MemberApiSpecification {
 
     @PatchMapping
     public ResponseEntity<MemberResponse> modifyMember(@RequestBody @Valid ModifyMemberRequest request) {
-        log.info("사용자 수정 요청: request={}", request);
+        log.info("사용자 수정 요청");
 
-        MemberDto memberDto = memberService.modifyMember(request);
+        ModifyMemberCommand command = ModifyMemberCommand.of(
+                request.getNickname(),
+                request.getGender(),
+                request.getTel(),
+                request.getBirthday()
+        );
+
+        MemberDto memberDto = memberService.modifyMember(command);
 
         return ResponseEntity.status(HttpStatus.OK).body(MemberResponse.fromMember(memberDto));
     }
 
     @PatchMapping("/password")
     public ResponseEntity<Void> modifyPassword(@RequestBody @Valid ModifyPasswordRequest request, HttpSession session) {
-        log.info("비밀번호 수정 요청: request={}", request);
+        log.info("비밀번호 수정 요청");
 
         String authenticatedUsername = (String) session.getAttribute(attributeOfUsername);
-        memberService.modifyPassword(request, authenticatedUsername);
+        ModifyPasswordCommand command = ModifyPasswordCommand.of(authenticatedUsername, request.getNewPassword());
+
+        memberService.modifyPassword(command);
+
         session.setAttribute(attributeOfUsername, null);
 
         return ResponseEntity.status(HttpStatus.OK).build();
@@ -80,9 +103,11 @@ public class MemberController implements MemberApiSpecification {
 
     @PatchMapping("/role")
     public ResponseEntity<MemberRoleResponse> modifyRole(@RequestBody @Valid ModifyRoleRequest request) {
-        log.info("권한 수정 요청: request={}", request);
+        log.info("권한 수정 요청");
 
-        memberService.modifyRole(request);
+        ModifyRoleCommand command = ModifyRoleCommand.of(request.getId(), request.getRole());
+
+        memberService.modifyRole(command);
         sessionService.signOut(request.getId());
 
         return ResponseEntity.status(HttpStatus.OK).build();
