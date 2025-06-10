@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.homefit.homefit.board.application.ArticleService;
+import com.homefit.homefit.board.application.command.CommentCommand;
+import com.homefit.homefit.board.application.command.ModifyArticleCommand;
+import com.homefit.homefit.board.application.command.PostArticleCommand;
 import com.homefit.homefit.board.application.dto.ArticlePageDto;
 import com.homefit.homefit.board.application.dto.ArticleSimpleDto;
 import com.homefit.homefit.board.controller.request.CommentRequest;
@@ -52,13 +55,15 @@ public class ArticleController implements ArticleApiSpecification {
     @GetMapping("/article/detail")
     public ResponseEntity<ArticleSimpleResponse> getArticleForComment(@RequestParam Long commentId) {
         ArticleSimpleDto dto = articleService.getArticleByComment(commentId);
-    	
-    	return ResponseEntity.ok(ArticleSimpleResponse.of(dto.getId()));
+
+        return ResponseEntity.ok(ArticleSimpleResponse.of(dto.getId()));
     }
 
     @PostMapping("/article/comment")
     public ResponseEntity<Void> comment(@RequestBody @Valid CommentRequest request) {
-        articleService.comment(request);
+        CommentCommand command = CommentCommand.of(request.getArticleId(), request.getParentCommentId(), request.getContent());
+        
+        articleService.comment(command);
 
         return ResponseEntity.created(null).build();
     }
@@ -89,7 +94,9 @@ public class ArticleController implements ArticleApiSpecification {
             @PathVariable("board-id") Long boardId,
             @RequestBody @Valid PostArticleRequest request) {
         log.info("게시글 작성 요청: boardId={}, request={}", boardId, request);
-        articleService.postArticle(boardId, request);
+
+        PostArticleCommand command = PostArticleCommand.of(request.getTitle(), request.getContent(), boardId);
+        articleService.postArticle(command);
         return ResponseEntity.created(null).build();
     }
 
@@ -98,7 +105,8 @@ public class ArticleController implements ArticleApiSpecification {
             @PathVariable("board-id") Long boardId,
             @RequestBody @Valid ModifyArticleRequest request) {
         log.info("게시글 수정 요청: boardId={}, request={}", boardId, request);
-        articleService.modifyArticle(boardId, request);
+        ModifyArticleCommand command = ModifyArticleCommand.of(request.getId(), request.getTitle(), request.getContent(), boardId);
+        articleService.modifyArticle(command);
         return ResponseEntity.ok().build();
     }
 

@@ -1,5 +1,6 @@
 package com.homefit.homefit.consult.controller;
 
+import com.homefit.homefit.consult.application.command.AnalyzeContractCommand;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,7 +45,14 @@ public class ConsultController implements ConsultApiSpecification {
     public ResponseEntity<AnalyzeContractResponse> analyzeContract(@ModelAttribute AnalyzeContractRequest request) {
         log.info("계약서 분석 요청: {}", request);
 
-        AnalyzeContractDto dto = analyzeConsultService.analyzeContract(request);
+        AnalyzeContractCommand command = AnalyzeContractCommand.of(
+                request.getContractFile(),
+                request.getConsultRoomId(),
+                request.getMessage(),
+                request.getIsFirst()
+        );
+
+        AnalyzeContractDto dto = analyzeConsultService.analyzeContract(command);
 
         return ResponseEntity.ok(AnalyzeContractResponse.from(dto));
     }

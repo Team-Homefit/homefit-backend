@@ -1,7 +1,7 @@
 package com.homefit.homefit.consult.application;
 
+import com.homefit.homefit.consult.application.command.AnalyzeContractCommand;
 import com.homefit.homefit.consult.application.dto.AnalyzeContractDto;
-import com.homefit.homefit.consult.controller.request.AnalyzeContractRequest;
 import com.homefit.homefit.consult.domain.ConsultMessage;
 import com.homefit.homefit.consult.domain.ConsultRoom;
 import com.homefit.homefit.consult.persistence.ConsultRepository;
@@ -40,24 +40,24 @@ public class AnalyzeConsultService {
     }
 
     @Transactional
-    @PreAuthorize(("hasRole('BASIC')"))
-    public AnalyzeContractDto analyzeContract(AnalyzeContractRequest request) {
-        Optional<Long> givenRoomId = getConsultRoomId(request);
+    @PreAuthorize("hasRole('BASIC')")
+    public AnalyzeContractDto analyzeContract(AnalyzeContractCommand command) {
+        Optional<Long> givenRoomId = getConsultRoomId(command.getConsultRoomId(), command.getIsFirstChat());
         String conversationId = getConversationId(givenRoomId);
 
         // AI API 호출
-        Media media = convertToMedia(request.getContractFile());
+        Media media = convertToMedia(command.getContractFile());
         String response = chatClient.prompt()
-                .user(userSpec -> userSpec.text(request.getMessage() == null ? DEFAULT_USER_PROMPT : request.getMessage()).media(media))
+                .user(userSpec -> userSpec.text(command.getMessage() == null ? DEFAULT_USER_PROMPT : command.getMessage()).media(media))
                 .advisors(advSpec -> advSpec.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call()
                 .content();
         log.info("AI 응답: {}", response);
 
         // AI 응답 저장
-        Long roomId = givenRoomId.orElseGet(() -> saveRoom(conversationId, request.getMessage()));
+        Long roomId = givenRoomId.orElseGet(() -> saveRoom(conversationId, command.getMessage()));
 
-        ConsultMessage memberMessage = ConsultMessage.of(roomId,request.getMessage(),true);
+        ConsultMessage memberMessage = ConsultMessage.of(roomId, command.getMessage(), true);
         ConsultMessage aiMessage = ConsultMessage.of(roomId, response,false);
         consultRepository.insertMessages(List.of(memberMessage, aiMessage));
 
@@ -65,18 +65,18 @@ public class AnalyzeConsultService {
         return AnalyzeContractDto.from(conversationId, aiMessage);
     }
 
-    private Optional<Long> getConsultRoomId(AnalyzeContractRequest request) {
-        if (request.getConsultRoomId() == null) {
-            if (!request.getIsFirst()) {
+    private Optional<Long> getConsultRoomId(Long consultRoomId, Boolean isFirstChat) {
+        if (consultRoomId == null) {
+            if (!isFirstChat) {
                 throw new HomefitException(HttpStatus.BAD_REQUEST, "상담방 ID가 명확하지 않습니다.");
             }
             return Optional.empty();
         }
 
-        if (request.getIsFirst()) {
+        if (isFirstChat) {
             throw new HomefitException(HttpStatus.BAD_REQUEST, "상담방 ID가 명확하지 않습니다.");
         }
-        return Optional.of(request.getConsultRoomId());
+        return Optional.of(consultRoomId);
     }
 
     private String getConversationId(Optional<Long> consultId) {

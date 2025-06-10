@@ -2,15 +2,14 @@ package com.homefit.homefit.house.controller.request;
 
 import java.time.LocalDate;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
-@NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class SearchHouseDealRequest {
-	private Double area;
-	private LocalDate since;
-	private LocalDate until;
+	private final Double area;
+	private final LocalDate since;
+	private final LocalDate until;
 }

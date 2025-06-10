@@ -3,14 +3,14 @@ package com.homefit.homefit.auth.application;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.homefit.homefit.auth.application.command.IssueCodeCommand;
+import com.homefit.homefit.auth.application.command.VerifyCodeCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import com.homefit.homefit.auth.controller.request.IssueCodeRequest;
-import com.homefit.homefit.auth.controller.request.VerifyCodeRequest;
 import com.homefit.homefit.auth.util.CodeFactory;
 import com.homefit.homefit.auth.util.CodeMailTemplateLoader;
 import com.homefit.homefit.exception.HomefitException;
@@ -31,10 +31,10 @@ public class AuthService {
 	private final Map<String, String> codes = new HashMap<>();
 	private final MemberRepository memberRepository;
 	
-	public void sendCodeMail(IssueCodeRequest request) {
+	public void sendCodeMail(IssueCodeCommand command) {
 		// 회원가입을 위한 이메일 인증은 기가입 확인
-		if (request.getIsSignUp()) {
-			MemberPo memberPo = memberRepository.selectByUsername(request.getUsername());
+		if (command.getIsSignUp()) {
+			MemberPo memberPo = memberRepository.selectByUsername(command.getUsername());
 			if (memberPo != null) {
 				throw new HomefitException(HttpStatus.BAD_REQUEST, "이미 가입된 메일입니다");
 			}
@@ -46,7 +46,7 @@ public class AuthService {
         
         try {
             MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
-            mimeMessageHelper.setTo(request.getUsername());
+            mimeMessageHelper.setTo(command.getUsername());
             mimeMessageHelper.setSubject("이메일 인증 코드");
             mimeMessageHelper.setText(codeMailTemplateLoader.getCodeMail(code), true);
         } catch (MessagingException e) {
@@ -59,17 +59,17 @@ public class AuthService {
         	throw new HomefitException(HttpStatus.INTERNAL_SERVER_ERROR, "메일 전송에 실패했습니다");
 		}
         
-        codes.put(request.getUsername(), code);
+        codes.put(command.getUsername(), code);
 	}
 	
-	public void verifyCode(VerifyCodeRequest request) {
-		String issuedCode = codes.get(request.getUsername());
+	public void verifyCode(VerifyCodeCommand command) {
+		String issuedCode = codes.get(command.getUsername());
 		
 		if (issuedCode == null) {
 			throw new HomefitException(HttpStatus.BAD_REQUEST, "인증 코드가 발급되지 않았습니다");
 		}
 		
-		if (!issuedCode.equals(request.getCode())) {
+		if (!issuedCode.equals(command.getCode())) {
 			throw new HomefitException(HttpStatus.BAD_REQUEST, "인증 코드가 일치하지 않습니다");
 		}
 	}
