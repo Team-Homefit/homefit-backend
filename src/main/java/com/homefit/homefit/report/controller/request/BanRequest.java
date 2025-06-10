@@ -11,11 +11,11 @@ import lombok.Getter;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class BanRequest {
 	@NotNull(message = "정지할 사용자 ID는 필수입니다")
-	Long reporteeId;
+	private final Long reporteeId;
 	@NotNull(message = "정지 기간은 필수입니다")
-	BanDuration duration;
+	private final BanDuration duration;
 	@NotNull(message = "정지 사유는 필수입니다")
-	String reason;
+	private final String reason;
 	
 	
 	@Override
