@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.homefit.homefit.consult.application.command.KnowledgeQnACommand;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.homefit.homefit.consult.application.dto.KnowledgeQnADto;
-import com.homefit.homefit.consult.controller.request.KnowledgeQnARequest;
 import com.homefit.homefit.consult.domain.ConsultMessage;
 import com.homefit.homefit.consult.domain.ConsultRoom;
 import com.homefit.homefit.consult.persistence.ConsultRepository;
@@ -37,24 +37,24 @@ public class KnowledgeQnaService {
     }
 
     @Transactional
-    @PreAuthorize(("hasRole('BASIC')"))
-    public KnowledgeQnADto askKnowledge(KnowledgeQnARequest request) {
-        Optional<Long> givenRoomId = getConsultRoomId(request);
+    @PreAuthorize("hasAnyRole('BASIC')")
+    public KnowledgeQnADto askKnowledge(KnowledgeQnACommand command) {
+        Optional<Long> givenRoomId = getConsultRoomId(command);
         String conversationId = getConversationId(givenRoomId);
 
         // AI API 호출
         String response = chatClient.prompt()
                 .user(userSpec -> userSpec
-                        .text(request.getMessage()))
+                        .text(command.getMessage()))
                 .advisors(advSpec -> advSpec.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call()
                 .content();
         log.info("AI 응답: {}", response);
 
         // AI 응답 저장
-        Long roomId = givenRoomId.orElseGet(() -> saveRoom(conversationId, request.getMessage()));
+        Long roomId = givenRoomId.orElseGet(() -> saveRoom(conversationId, command.getMessage()));
 
-        ConsultMessage memberMessage = ConsultMessage.of(roomId, request.getMessage(), true);
+        ConsultMessage memberMessage = ConsultMessage.of(roomId, command.getMessage(), true);
         ConsultMessage aiMessage = ConsultMessage.of(roomId, response, false);
         consultRepository.insertMessages(List.of(memberMessage, aiMessage));
 
@@ -62,18 +62,18 @@ public class KnowledgeQnaService {
         return KnowledgeQnADto.from(conversationId, aiMessage);
     }
 
-    private Optional<Long> getConsultRoomId(KnowledgeQnARequest request) {
-        if (request.getConsultRoomId() == null) {
-            if (!request.getIsFirst()) {
+    private Optional<Long> getConsultRoomId(KnowledgeQnACommand command) {
+        if (command.getConsultRoomId() == null) {
+            if (!command.getIsFirst()) {
                 throw new HomefitException(HttpStatus.BAD_REQUEST, "상담방 ID가 명확하지 않습니다.");
             }
             return Optional.empty();
         }
 
-        if (request.getIsFirst()) {
+        if (command.getIsFirst()) {
             throw new HomefitException(HttpStatus.BAD_REQUEST, "상담방 ID가 명확하지 않습니다.");
         }
-        return Optional.of(request.getConsultRoomId());
+        return Optional.of(command.getConsultRoomId());
     }
 
     private String getConversationId(Optional<Long> consultId) {
