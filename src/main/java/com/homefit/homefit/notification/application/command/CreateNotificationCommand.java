@@ -1,6 +1,5 @@
 package com.homefit.homefit.notification.application.command;
 
-import com.homefit.homefit.board.application.command.PostArticleCommand;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

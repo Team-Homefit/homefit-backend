@@ -13,8 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.homefit.homefit.notification.application.dto.NotificationDto;
 import com.homefit.homefit.notification.application.dto.NotificationPageDto;
-import com.homefit.homefit.notification.controller.request.CreateNotificationRequest;
-import com.homefit.homefit.notification.controller.request.UpdateNotificationRequest;
 import com.homefit.homefit.notification.domain.Notification;
 import com.homefit.homefit.notification.persistence.NotificationRepository;
 import com.homefit.homefit.notification.persistence.po.NotificationPagePo;
