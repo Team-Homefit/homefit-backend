@@ -86,7 +86,9 @@ public class ConsultController implements ConsultApiSpecification {
     @PatchMapping(path = "/rooms/{roomId}/name")
     public ResponseEntity<Void> updateRoomName(@PathVariable Long roomId, @RequestBody @Valid UpdateRoomNameRequest request) {
             log.info("채팅방 이름 수정 요청: {}, {}", roomId, request.getName());
-        consultService.updateRoomName(roomId, request.getName());
+
+        UpdateRoomNameCommand command = UpdateRoomNameCommand.of(roomId, request.getName());
+        consultService.updateRoomName(command);
         return ResponseEntity.noContent().build();
     }
 
