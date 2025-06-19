@@ -14,16 +14,14 @@ public class SearchDealResponse {
 	private final List<HouseDeal> deals;
 	private final Integer page;
 	private final Integer pageSize;
-	private final Integer totalPages;
-	private final Long totalElements;
-	
+	private final Integer leftPages;
+
 	public static SearchDealResponse from(DealPageDto dto) {
 		return new SearchDealResponse(
 				dto.getHouseDeals().stream().map(SearchDealResponse.HouseDeal::from).toList(),
 				dto.getPage(),
 				dto.getPageSize(),
-				dto.getTotalPages(),
-				dto.getTotalElements());
+				dto.getLeftPages());
 	}
 
 	@Getter

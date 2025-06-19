@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
-public class HouseService {
+public class    HouseService {
     private final HouseRepository houseRepository;
 
     @PreAuthorize("hasAnyRole('BASIC')")
@@ -50,7 +50,7 @@ public class HouseService {
                 request.getNeLongitude()
         );
         
-        List<DealPagePo> dealPagePos = houseRepository.searchDealsByPage(request.getSize(), offset, condition);
+        List<DealPagePo> dealPagePos = houseRepository.searchDealsByPage(request.getSize() * 5, offset, condition);
         
         if (dealPagePos == null) {
             throw new HomefitException(HttpStatus.NOT_FOUND, "아파트 거래 내력을 찾을 수 없습니다.");

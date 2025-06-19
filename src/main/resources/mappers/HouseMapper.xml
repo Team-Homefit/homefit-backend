@@ -74,16 +74,8 @@
 			hd.deal_amount AS dealAmount,
 			hd.deal_year AS dealYear,
 			hd.deal_month AS dealMonth,
-			hd.deal_day AS dealDay,
-			count_info.totalElements
-	    FROM housedeal hd
-	    JOIN houseinfo hi ON hd.apt_seq = hi.apt_seq
-	    CROSS JOIN (
-	        SELECT COUNT(*) AS totalElements
-	        FROM housedeal hd
-	        JOIN houseinfo hi ON hd.apt_seq = hi.apt_seq
-			<include refid="searchHouseDealConditions"/>
-	    ) count_info
+			hd.deal_day AS dealDay
+	    FROM housedeal hd JOIN houseinfo hi ON hd.apt_seq = hi.apt_seq
 		<include refid="searchHouseDealConditions"/>
         ORDER BY hd.deal_year DESC, hd.deal_month DESC, hd.deal_day DESC
 	    LIMIT #{pageSize}
