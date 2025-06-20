@@ -46,7 +46,7 @@ public interface HouseApiSpecification {
         responses = {
                 @ApiResponse(
                         responseCode = "200",
-                        description = "주택 거래 정보 조회 성공",
+                        description = "주택 거래 정보 조회 성공. leftPages = 5 이하의 정수",
                         content = @Content(schema = @Schema(implementation = SearchDealResponse.class), mediaType = "application/json")
                 ),
                 @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content())
