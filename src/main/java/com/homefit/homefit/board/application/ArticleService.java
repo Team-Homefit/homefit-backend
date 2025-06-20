@@ -8,10 +8,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.homefit.homefit.board.application.command.CommentCommand;
+import com.homefit.homefit.board.application.command.PostArticleCommand;
+import com.homefit.homefit.board.application.command.ModifyArticleCommand;
 import com.homefit.homefit.board.application.dto.ArticlePageDto;
 import com.homefit.homefit.board.application.dto.ArticleSimpleDto;
 import com.homefit.homefit.board.domain.Like;
-import com.homefit.homefit.board.controller.request.CommentRequest;
 import com.homefit.homefit.board.domain.Comment;
 import com.homefit.homefit.board.application.dto.ArticleDto;
 import com.homefit.homefit.board.domain.Viewer;
@@ -26,8 +28,6 @@ import com.homefit.homefit.board.persistence.po.ArticleSimplePo;
 import com.homefit.homefit.board.persistence.po.CommentPo;
 import com.homefit.homefit.exception.HomefitException;
 import com.homefit.homefit.security.util.UserPrincipalUtil;
-import com.homefit.homefit.board.controller.request.ModifyArticleRequest;
-import com.homefit.homefit.board.controller.request.PostArticleRequest;
 import com.homefit.homefit.board.domain.Article;
 
 import lombok.RequiredArgsConstructor;
@@ -87,20 +87,20 @@ public class ArticleService {
 
     @Transactional
     @PreAuthorize("hasRole('BASIC')")
-    public void comment(CommentRequest request) {
+    public void comment(CommentCommand command) {
         Long memberId = UserPrincipalUtil.getId()
                 .orElseThrow(() -> new HomefitException(HttpStatus.UNAUTHORIZED, "로그인 후 이용해주세요"));
 
-        int count = articleRepository.countArticleInInterestedRegionById(request.getArticleId(), memberId);
+        int count = articleRepository.countArticleInInterestedRegionById(command.getArticleId(), memberId);
         if (count == 0) {
             throw new HomefitException(HttpStatus.BAD_REQUEST, "권한이 없거나 존재하지 않는 게시글입니다");
         }
 
         Comment comment = Comment.of(
-                request.getArticleId(),
+                command.getArticleId(),
                 memberId,
-                request.getParentCommentId(),
-                request.getContent());
+                command.getParentCommentId(),
+                command.getContent());
 
         int result = commentRepository.insert(comment);
         if (result == 0) {
@@ -179,17 +179,17 @@ public class ArticleService {
 
     @Transactional
     @PreAuthorize("hasRole('BASIC')")
-    public void postArticle(Long boardId, PostArticleRequest request) {
+    public void postArticle(PostArticleCommand command) {
         Long writerId = UserPrincipalUtil.getId().orElseThrow(() -> new HomefitException(HttpStatus.UNAUTHORIZED,
                 "로그인 후 이용해주세요"));
 
         // 관심지역 검사
-        if (!articleRepository.isInterestedRegion(boardId, writerId)) {
+        if (!articleRepository.isInterestedRegion(command.getBoardId(), writerId)) {
             throw new HomefitException(HttpStatus.FORBIDDEN, "관심지역이 아닙니다.");
         }
 
         // 게시글 생성 및 ID 반환
-        Article article = Article.of(writerId, boardId, request.getTitle(), request.getContent());
+        Article article = Article.of(writerId, command.getBoardId(), command.getTitle(), command.getContent());
         int result = articleRepository.createArticle(article);
         if (result == 0) {
             throw new HomefitException(HttpStatus.INTERNAL_SERVER_ERROR, "게시글 생성에 실패했습니다.");
@@ -198,11 +198,11 @@ public class ArticleService {
 
     @Transactional
     @PreAuthorize("hasRole('BASIC')")
-    public void modifyArticle(Long boardId, ModifyArticleRequest request) {
+    public void modifyArticle(ModifyArticleCommand command) {
         Long updaterId = UserPrincipalUtil.getId().orElseThrow(() -> new HomefitException(HttpStatus.UNAUTHORIZED,
                 "로그인 후 이용해주세요"));
 
-        ArticlePo articlePo = articleRepository.getArticleById(request.getId(), updaterId);
+        ArticlePo articlePo = articleRepository.getArticleById(command.getId(), updaterId);
         if (articlePo == null) {
             throw new HomefitException(HttpStatus.NOT_FOUND, "존재하지 않는 게시글입니다.");
         }
@@ -215,7 +215,7 @@ public class ArticleService {
                 articlePo.getArticleLastUpdatedAt(),
                 articlePo.getArticleIsDeleted());
 
-        article.update(request.getTitle(), request.getContent(), updaterId);
+        article.update(command.getTitle(), command.getContent(), updaterId);
 
         int result = articleRepository.updateArticle(article);
         if (result == 0) {

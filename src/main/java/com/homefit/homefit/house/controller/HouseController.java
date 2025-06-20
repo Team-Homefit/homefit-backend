@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.homefit.homefit.house.application.HouseService;
+import com.homefit.homefit.house.application.command.SearchDealCommand;
+import com.homefit.homefit.house.application.command.SearchHouseDealCommand;
 import com.homefit.homefit.house.application.dto.AreaDto;
 import com.homefit.homefit.house.application.dto.DealPageDto;
 import com.homefit.homefit.house.application.dto.HouseDealDto;
@@ -35,8 +37,8 @@ public class HouseController implements HouseApiSpecification {
 
     @GetMapping("/{sequence}")
     public ResponseEntity<SearchHouseResponse> searchHouses(@PathVariable("sequence") String sequence) {
-        log.info("주택 조회 요청: sequence={}", sequence);
-        
+        log.info("주택 조회 요청");
+
         HouseDto house = houseService.searchHouse(sequence);
         
         return ResponseEntity.status(HttpStatus.OK).body(SearchHouseResponse.from(house));
@@ -44,17 +46,26 @@ public class HouseController implements HouseApiSpecification {
 
     @GetMapping("/deal")
     public ResponseEntity<SearchDealResponse> searchDeals(@ModelAttribute SearchDealRequest request) {
-        log.info("주택 거래 조회 요청: {}", request);
-        
-        DealPageDto houseDeals = houseService.searchDeals(request);
+        SearchDealCommand command = SearchDealCommand.of(
+                request.getSize(),
+                request.getPage(),
+                request.getSequence(),
+                request.getSggCode(),
+                request.getUmdCode(),
+                request.getSwLatitude(),
+                request.getSwLongitude(),
+                request.getNeLatitude(),
+                request.getNeLongitude());
+
+        DealPageDto houseDeals = houseService.searchDeals(command);
         
         return ResponseEntity.status(HttpStatus.OK).body(SearchDealResponse.from(houseDeals));
     }
     
     @GetMapping("/{sequence}/area")
     public ResponseEntity<SearchAreaResponse> searchAreas(@PathVariable String sequence) {
-        log.info("주택 면적 조회 요청: sequence = {}", sequence);
-        
+        log.info("주택 면적 조회 요청");
+
         List<AreaDto> areaDtos = houseService.searchAreas(sequence);
         
     	return ResponseEntity.ok(SearchAreaResponse.of(areaDtos));
@@ -62,10 +73,16 @@ public class HouseController implements HouseApiSpecification {
     
     @GetMapping("/{sequence}/deal")
     public ResponseEntity<SearchHouseDealResponse> searchHouseDeal(@PathVariable String sequence, @ModelAttribute SearchHouseDealRequest request) {
-        log.info("주택 거래 조회 요청: sequence = {}, request = {}", sequence, request);
+        log.info("한 주택의 거래 조회 요청");
+
+        SearchHouseDealCommand command = SearchHouseDealCommand.of(
+                sequence,
+                request.getArea(),
+                request.getSince(),
+                request.getUntil());
         
-        HouseDealDto dtos = houseService.searchHouseDeal(sequence, request);
+        HouseDealDto dto = houseService.searchHouseDeal(command);
         
-    	return ResponseEntity.ok(SearchHouseDealResponse.of(sequence, dtos));
+    	return ResponseEntity.ok(SearchHouseDealResponse.of(sequence, dto));
     }
 }

@@ -28,7 +28,7 @@ public class RegionService {
     }
 
     @PreAuthorize("hasAnyRole('BASIC', 'ADMIN')")
-    public List<ShopCountDto> searchSecondShopsNear(Double latitude, Double longitude) {
+    public List<ShopCountDto> searchShopsNear(Double latitude, Double longitude) {
         /**
     	 * Q1: 보건의료
     	 * G204: 종합소매, P105: 일반 교육,  I211: 주점, R104: 유원지·오락

@@ -1,22 +1,21 @@
 package com.homefit.homefit.house.controller.request;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
-@NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class SearchDealRequest {
-	private Integer size;
-	private Integer page;
-	private String sequence;
-	private String sggCode;
-	private String umdCode;
-	private Double swLatitude;
-	private Double swLongitude;
-	private Double neLatitude;
-	private Double neLongitude;
+	private final Integer size;
+	private final Integer page;
+	private final String sequence;
+	private final String sggCode;
+	private final String umdCode;
+	private final Double swLatitude;
+	private final Double swLongitude;
+	private final Double neLatitude;
+	private final Double neLongitude;
 	
 	@Override
 	public String toString() {
