@@ -1,5 +1,7 @@
 package com.homefit.homefit.notification.controller;
 
+import com.homefit.homefit.notification.application.command.CreateNotificationCommand;
+import com.homefit.homefit.notification.application.command.UpdateNotificationCommand;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,7 +38,8 @@ public class NotificationController implements NotificationApiSpecification {
     @Operation(summary = "공지사항 생성", description = "새로운 공지사항을 생성합니다. (어드민만)")
     @PostMapping
     public ResponseEntity<NotificationDetailResponse> create(@RequestBody @Valid CreateNotificationRequest request) {
-        NotificationDto notificationDto = notificationService.createNotification(request);
+        CreateNotificationCommand command = CreateNotificationCommand.of(request.getTitle(), request.getContent());
+        NotificationDto notificationDto = notificationService.createNotification(command);
         return ResponseEntity.ok(NotificationDetailResponse.from(notificationDto));
     }
 
@@ -44,7 +47,8 @@ public class NotificationController implements NotificationApiSpecification {
     @Operation(summary = "공지사항 수정", description = "기존 공지사항을 수정합니다. (어드민만)")
     @PatchMapping
     public ResponseEntity<NotificationDetailResponse> update(@RequestBody @Valid UpdateNotificationRequest request) {
-        NotificationDto notificationDto = notificationService.updateNotification(request);
+        UpdateNotificationCommand command = UpdateNotificationCommand.of(request.getId(),  request.getTitle(), request.getContent());
+        NotificationDto notificationDto = notificationService.updateNotification(command);
         return ResponseEntity.ok(NotificationDetailResponse.from(notificationDto));
     }
 

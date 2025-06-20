@@ -2,6 +2,7 @@ package com.homefit.homefit.consult.application;
 
 import java.util.List;
 
+import com.homefit.homefit.consult.application.command.UpdateRoomNameCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -40,15 +41,15 @@ public class ConsultService {
 
     @Transactional
     @PreAuthorize("hasAnyRole('BASIC')")
-    public void updateRoomName(Long roomId, String name) {
-        ConsultRoomPo roomPo = consultRepository.selectRoomById(roomId);
+    public void updateRoomName(UpdateRoomNameCommand command) {
+        ConsultRoomPo roomPo = consultRepository.selectRoomById(command.getRoomId());
 
         if (roomPo == null) {
             throw new HomefitException(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다");
         }
 
         ConsultRoom room = ConsultRoom.of(roomPo.getConsultRoomId(), roomPo.getMemberId(), roomPo.getConversationId(), roomPo.getConsultRoomName(), roomPo.getConsultRoomCreatedAt(), roomPo.getConsultRoomIsDeleted());
-        room.updateName(name);
+        room.updateName(command.getName());
 
         int result = consultRepository.updateRoomName(room.getId(), room.getName());
         if (result == 0) {

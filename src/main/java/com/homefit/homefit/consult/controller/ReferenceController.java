@@ -1,6 +1,7 @@
 package com.homefit.homefit.consult.controller;
 
 import com.homefit.homefit.consult.application.ReferenceService;
+import com.homefit.homefit.consult.application.command.AddReferenceCommand;
 import com.homefit.homefit.consult.application.dto.SimilarWord;
 import com.homefit.homefit.consult.controller.request.AddReferenceRequest;
 import com.homefit.homefit.consult.controller.response.SearchSimilarReferenceResponse;
@@ -27,7 +28,12 @@ public class ReferenceController {
     public ResponseEntity<Void> add(@RequestBody AddReferenceRequest request) {
         log.info("단어 저장 요청: request = {}", request);
 
-        referenceService.append(request);
+        List<AddReferenceCommand.Word> words = request.getWords().stream()
+                .map(word -> AddReferenceCommand.Word.of(word.getContent(), word.getReferenceType(), word.getTags()))
+                .toList();
+        AddReferenceCommand command = AddReferenceCommand.of(words);
+
+        referenceService.add(command);
 
         return ResponseEntity.ok(null);
     }

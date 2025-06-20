@@ -1,6 +1,8 @@
 package com.homefit.homefit.consult.controller;
 
 import com.homefit.homefit.consult.application.command.AnalyzeContractCommand;
+import com.homefit.homefit.consult.application.command.KnowledgeQnACommand;
+import com.homefit.homefit.consult.application.command.UpdateRoomNameCommand;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -60,8 +62,9 @@ public class ConsultController implements ConsultApiSpecification {
     @PostMapping(path = "/knowledge")
     public ResponseEntity<KnowledgeQnAResponse> askKnowledge(@RequestBody @Valid KnowledgeQnARequest request) {
         log.info("부동산 질문 요청: {}", request);
+        KnowledgeQnACommand commnad = KnowledgeQnACommand.of(request.getConsultRoomId(), request.getMessage(), request.getIsFirst());
 
-        KnowledgeQnADto dto = knowledgeQnaService.askKnowledge(request);
+        KnowledgeQnADto dto = knowledgeQnaService.askKnowledge(commnad);
 
         return ResponseEntity.ok(KnowledgeQnAResponse.from(dto));
     }
@@ -83,7 +86,9 @@ public class ConsultController implements ConsultApiSpecification {
     @PatchMapping(path = "/rooms/{roomId}/name")
     public ResponseEntity<Void> updateRoomName(@PathVariable Long roomId, @RequestBody @Valid UpdateRoomNameRequest request) {
             log.info("채팅방 이름 수정 요청: {}, {}", roomId, request.getName());
-        consultService.updateRoomName(roomId, request.getName());
+
+        UpdateRoomNameCommand command = UpdateRoomNameCommand.of(roomId, request.getName());
+        consultService.updateRoomName(command);
         return ResponseEntity.noContent().build();
     }
 

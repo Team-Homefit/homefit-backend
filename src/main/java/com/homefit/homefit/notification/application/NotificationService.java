@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.homefit.homefit.notification.application.command.CreateNotificationCommand;
+import com.homefit.homefit.notification.application.command.UpdateNotificationCommand;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -11,8 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.homefit.homefit.notification.application.dto.NotificationDto;
 import com.homefit.homefit.notification.application.dto.NotificationPageDto;
-import com.homefit.homefit.notification.controller.request.CreateNotificationRequest;
-import com.homefit.homefit.notification.controller.request.UpdateNotificationRequest;
 import com.homefit.homefit.notification.domain.Notification;
 import com.homefit.homefit.notification.persistence.NotificationRepository;
 import com.homefit.homefit.notification.persistence.po.NotificationPagePo;
@@ -30,13 +30,13 @@ public class NotificationService {
     // 공지사항 생성
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public NotificationDto createNotification(CreateNotificationRequest request) {
+    public NotificationDto createNotification(CreateNotificationCommand command) {
         Long writerId = UserPrincipalUtil.getId().orElseThrow(() -> new HomefitException(HttpStatus.UNAUTHORIZED,
                 "로그인 후 이용해주세요"));
 
         Notification notification = Notification.of(
-                request.getTitle(),
-                request.getContent(),
+                command.getTitle(),
+                command.getContent(),
                 writerId);
 
         int result = notificationRepository.insert(notification);
@@ -52,9 +52,9 @@ public class NotificationService {
     // 공지사항 수정
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public NotificationDto updateNotification(UpdateNotificationRequest request) {
+    public NotificationDto updateNotification(UpdateNotificationCommand command) {
         // 기존 공지사항 조회
-        NotificationPo existingPo = notificationRepository.selectById(request.getId());
+        NotificationPo existingPo = notificationRepository.selectById(command.getId());
 
         if (existingPo == null) {
             throw new HomefitException(HttpStatus.NOT_FOUND, "공지사항 조회에 실패했습니다");
@@ -73,7 +73,7 @@ public class NotificationService {
         Notification notification = existingPo.toDomain();
 
         // 공지사항 수정
-        notification.update(request.getTitle(), request.getContent());
+        notification.update(command.getTitle(), command.getContent());
 
         int result = notificationRepository.update(notification);
         if (result == 0) {
@@ -81,7 +81,7 @@ public class NotificationService {
         }
 
         // 수정된 공지사항을 다시 조회해서 DTO로 반환
-        NotificationPo updatedPo = notificationRepository.selectById(request.getId());
+        NotificationPo updatedPo = notificationRepository.selectById(command.getId());
         if (updatedPo == null) {
             throw new HomefitException(HttpStatus.NOT_FOUND, "공지사항 수정 후 조회에 실패했습니다");
         }
