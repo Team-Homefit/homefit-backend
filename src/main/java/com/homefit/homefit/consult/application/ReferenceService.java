@@ -1,8 +1,8 @@
 package com.homefit.homefit.consult.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.homefit.homefit.consult.application.command.AddReferenceCommand;
 import com.homefit.homefit.consult.application.dto.SimilarWord;
-import com.homefit.homefit.consult.controller.request.AddReferenceRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,8 +24,8 @@ public class ReferenceService {
     private final VectorStore vectorStore;
     private final ObjectMapper mapper;
 
-    public void append(AddReferenceRequest request) {
-        List<Document> documents = request.getWords().stream()
+    public void append(AddReferenceCommand command) {
+        List<Document> documents = command.getWords().stream()
                 .map(word -> convert(word))
                 .toList();
 
@@ -47,7 +47,7 @@ public class ReferenceService {
         return results.stream().map(result -> SimilarWord.from(result, mapper)).toList();
     }
 
-    private Document convert(AddReferenceRequest.Word word) {
+    private Document convert(AddReferenceCommand.Word word) {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("type", word.getReferenceType().name());
         metadata.put("tags", word.getTags());
