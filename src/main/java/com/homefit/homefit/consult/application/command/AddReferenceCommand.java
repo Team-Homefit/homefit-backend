@@ -19,9 +19,9 @@ public class AddReferenceCommand {
     @Getter
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     public static class Word {
-        private String content;
-        private ReferenceType referenceType;
-        private List<String> tags;
+        private final String content;
+        private final ReferenceType referenceType;
+        private final List<String> tags;
 
         public static Word of(String content, ReferenceType referenceType, List<String> tags) {
             return new Word(content, referenceType, tags);
