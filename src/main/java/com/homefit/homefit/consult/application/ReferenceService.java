@@ -24,7 +24,7 @@ public class ReferenceService {
     private final VectorStore vectorStore;
     private final ObjectMapper mapper;
 
-    public void append(AddReferenceCommand command) {
+    public void add(AddReferenceCommand command) {
         List<Document> documents = command.getWords().stream()
                 .map(word -> convert(word))
                 .toList();

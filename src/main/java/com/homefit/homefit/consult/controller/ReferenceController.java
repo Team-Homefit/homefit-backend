@@ -33,7 +33,7 @@ public class ReferenceController {
                 .toList();
         AddReferenceCommand command = AddReferenceCommand.of(words);
 
-        referenceService.append(command);
+        referenceService.add(command);
 
         return ResponseEntity.ok(null);
     }
