@@ -24,6 +24,4 @@ public class DealPagePo {
     private final Integer dealYear;
     private final Integer dealMonth;
     private final Integer dealDay;
-    
-    private final Long totalElements;
 }

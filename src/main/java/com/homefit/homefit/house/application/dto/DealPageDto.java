@@ -14,19 +14,14 @@ public class DealPageDto {
     private final List<HouseDeal> houseDeals;
     private final Integer pageSize;
     private final Integer page;
-    private final Long totalElements;
-    private final Integer totalPages;
+    private final Integer leftPages;
 
     public static DealPageDto of(List<DealPagePo> pos, Integer size, Integer page) {
         return new DealPageDto(
-                pos.stream().map(HouseDeal::from).toList(),
+                pos.stream().limit(size).map(HouseDeal::from).toList(),
                 size,
                 page,
-                pos.isEmpty() ? 0 : pos.get(0).getTotalElements(),
-                (int) (pos.isEmpty() ? 0 
-                		: (pos.get(0).getTotalElements() % size == 0 
-                			? (pos.get(0).getTotalElements() / size) 
-        					: (pos.get(0).getTotalElements() / size + 1)))
+                pos.size() / size
         );
     }
 
