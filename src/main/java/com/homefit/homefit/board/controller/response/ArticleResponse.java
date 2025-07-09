@@ -82,7 +82,7 @@ public class ArticleResponse {
             );
         }
         
-        public static Comment createBlurredComment() {
+        public static Comment createBlankComment() {
             return new Comment(null, null, null, null, null, false, false);
         }
     }
