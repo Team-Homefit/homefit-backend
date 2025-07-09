@@ -29,7 +29,7 @@ public class ArticleResponse {
     private final List<Comment> comments;
 
     public static ArticleResponse from(ArticleDto articleDto) {
-        return ArticleResponse.builder()
+        ArticleResponseBuilder builder = ArticleResponse.builder()
             .articleId(articleDto.getId())
             .regionName(articleDto.getRegionName())
             .articleTitle(articleDto.getTitle())
@@ -41,11 +41,22 @@ public class ArticleResponse {
             .isLiked(articleDto.getIsLiked())
             .nickname(articleDto.getNickname())
             .writerId(articleDto.getWriterId())
-            .comments(articleDto.getComments().stream()
+            .isInterestedRegion(articleDto.getIsInterestedRegion());
+        
+        // 관심지역인 경우 실제 댓글, 아닌 경우 블러용 더미 댓글
+        if (articleDto.getIsInterestedRegion()) {
+            builder.comments(articleDto.getComments().stream()
                 .map(Comment::from)
-                .collect(Collectors.toList()))
-            .isInterestedRegion(articleDto.getIsInterestedRegion())
-            .build();
+                .collect(Collectors.toList()));
+        } else {
+            // 블러 처리용 더미 댓글 생성
+            List<Comment> dummyComments = articleDto.getComments().stream()
+                .map(comment -> Comment.createBlurredComment())
+                .collect(Collectors.toList());
+            builder.comments(dummyComments);
+        }
+        
+        return builder.build();
     }
 
     @Getter
@@ -69,6 +80,10 @@ public class ArticleResponse {
                 commentDto.getIsReply(),
                 commentDto.getIsDeleted()
             );
+        }
+        
+        public static Comment createBlankComment() {
+            return new Comment(null, null, null, null, null, false, false);
         }
     }
 } 
