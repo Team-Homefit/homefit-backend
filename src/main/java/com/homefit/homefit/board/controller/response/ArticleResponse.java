@@ -51,7 +51,7 @@ public class ArticleResponse {
         } else {
             // 블러 처리용 더미 댓글 생성
             List<Comment> dummyComments = articleDto.getComments().stream()
-                .map(comment -> Comment.createBlurredComment())
+                .map(comment -> Comment.createBlankComment())
                 .collect(Collectors.toList());
             builder.comments(dummyComments);
         }
