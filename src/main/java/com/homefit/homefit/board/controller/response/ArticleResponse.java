@@ -51,7 +51,7 @@ public class ArticleResponse {
         } else {
             // 블러 처리용 더미 댓글 생성
             List<Comment> dummyComments = articleDto.getComments().stream()
-                .map(comment -> Comment.createBlurredComment(comment.getCommentId()))
+                .map(comment -> Comment.createBlurredComment())
                 .collect(Collectors.toList());
             builder.comments(dummyComments);
         }
@@ -82,30 +82,8 @@ public class ArticleResponse {
             );
         }
         
-        public static Comment createBlurredComment(Long commentId) {
-            String[] blurMessages = {
-                "관심지역 설정 후 댓글을 확인할 수 있습니다. 이 지역의 소식을 놓치지 마세요!",
-                "이 지역의 댓글을 보려면 관심지역을 설정하세요. 다양한 의견을 확인해보세요.",
-                "댓글을 확인하려면 관심지역을 추가하세요. 지역 정보를 더 자세히 알아보세요.",
-                "관심지역 설정으로 댓글을 확인하세요. 실시간 소식을 받아보세요.",
-                "관심지역 설정 후 소통해보세요. 이웃들과 정보를 공유해보세요.",
-                "이웃들과 소통해보세요.",
-                "다양한 이야기를 들어보세요.",
-                "지역 커뮤니티에 참여해보세요."
-            };
-            
-            // commentId를 기반으로 랜덤하게 메시지 선택 (일관성 유지)
-            int messageIndex = (int) (commentId % blurMessages.length);
-            
-            return new Comment(
-                commentId,
-                null,
-                blurMessages[messageIndex],
-                null,
-                "익명",
-                false,
-                false
-            );
+        public static Comment createBlurredComment() {
+            return new Comment(null, null, null, null, null, false, false);
         }
     }
 } 
